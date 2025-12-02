@@ -1,0 +1,55 @@
+# Python
+# Byte-compiled / optimized / DLL files
+_pycache_/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Environments
+# Virtual environments:
+.venv
+venv/  # Including the 'venv' directory as requested
+env/
+/bin/
+/include/
+/lib/
+/lib64/
+
+# IDE files
+# VSCode
+.vscode/
+
+# Editor config files
+.editorconfig
+
+# OS/System files
+.DS_Store
+Thumbs.db
+
+# MyPy
+.mypy_cache/
+
+# FastAPI / General Python project specific
+*.log
+*.sqlite3
+/media/
+
+# Configuration and Sensitive Files
+.env 
+.flaskenv
