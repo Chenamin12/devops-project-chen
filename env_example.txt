@@ -1,0 +1,21 @@
+# Server Configuration
+PORT=3000
+NODE_ENV=development
+
+# MongoDB Configuration
+MONGO_URI=mongodb://admin:password123@localhost:27018/shopping_list_db?authSource=admin
+MONGO_DATABASE=shopping_list_db
+MONGO_ROOT_USERNAME=admin
+MONGO_ROOT_PASSWORD=password123
+
+# Mongo Express Configuration
+MONGO_EXPRESS_USERNAME=admin
+MONGO_EXPRESS_PASSWORD=admin123
+
+# JWT Configuration
+JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+JWT_EXPIRE=7d
+
+# File Upload Configuration
+UPLOAD_PATH=./uploads
+MAX_FILE_SIZE=5242880

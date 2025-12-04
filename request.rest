@@ -1,0 +1,146 @@
+### Shopping List API - Request Collection
+### Base URL
+@baseUrl = http://localhost:3000/api
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5MzE3MmViNzM2MGIwODBjZjQ4OTE0YiIsImlhdCI6MTc2NDg0ODM2MywiZXhwIjoxNzY1NDUzMTYzfQ.SvR8j0wAYArtZyHYW1T7_Sy70yjZgNN1sz3drxpxSMU
+
+### Variables
+@listId = 693174ec7360b080cf489181
+@productId =693175177360b080cf48918a
+
+###############################################
+### AUTHENTICATION ROUTES
+###############################################
+
+### Register a new user
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "email": "test@example.com",
+  "password": "password123"
+}
+
+### Login user
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "password123"
+}
+
+### Get current user (requires authentication)
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{token}}
+
+###############################################
+### SHOPPING LIST ROUTES
+###############################################
+
+### Get all shopping lists for logged-in user
+GET {{baseUrl}}/shopping-lists
+Authorization: Bearer {{token}}
+
+### Get single shopping list
+GET {{baseUrl}}/shopping-lists/{{listId}}
+Authorization: Bearer {{token}}
+
+### Create new shopping list
+POST {{baseUrl}}/shopping-lists
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Grocery Shopping"
+}
+
+### Delete shopping list
+DELETE {{baseUrl}}/shopping-lists/{{listId}}
+Authorization: Bearer {{token}}
+
+###############################################
+### PRODUCT ROUTES
+###############################################
+
+### Add product to shopping list (without image)
+POST {{baseUrl}}/shopping-lists/{{listId}}/products
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Milk",
+  "quantity": 2,
+  "isChecked": false
+}
+
+### Add product to shopping list (with image)
+POST {{baseUrl}}/shopping-lists/{{listId}}/products
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="name"
+
+Bread
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="quantity"
+
+1
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="isChecked"
+
+false
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="image"; filename="bread.jpg"
+Content-Type: image/jpeg
+
+< ./bread.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### Update product in shopping list
+PUT {{baseUrl}}/shopping-lists/{{listId}}/products/{{productId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Organic Milk",
+  "quantity": 100,
+  "isChecked": true
+}
+
+### Update product with new image
+PUT {{baseUrl}}/shopping-lists/{{listId}}/products/{{productId}}
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="name"
+
+Updated Bread
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="quantity"
+
+2
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="isChecked"
+
+true
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="image"; filename="new-bread.jpg"
+Content-Type: image/jpeg
+
+< ./new-bread.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### Delete product from shopping list
+DELETE {{baseUrl}}/shopping-lists/{{listId}}/products/{{productId}}
+Authorization: Bearer {{token}}
+
+###############################################
+### HEALTH CHECK
+###############################################
+
+### Health check
+GET {{baseUrl}}/health
+
