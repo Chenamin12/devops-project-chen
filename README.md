@@ -24,31 +24,32 @@ A Node.js Express application with MongoDB for managing shopping lists. Users ca
 1. Clone the repository and navigate to the project directory
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Create a `.env` file from the example:
+
 ```bash
 cp .env.example .env
 ```
 
 4. Update the `.env` file with your configuration (especially JWT_SECRET)
 
-5. Start MongoDB and Mongo Express using Docker Compose:
-```bash
-docker-compose up -d
-```
+5. Start the Express server:
 
-6. Start the Express server:
 ```bash
 npm start
 ```
 
-For development with auto-reload:
+For development with auto-reload (automatically starts Docker Compose):
+
 ```bash
 npm run dev
 ```
+
+**Note:** The `npm run dev` command automatically starts MongoDB and Mongo Express using Docker Compose. If you're using `npm start`, make sure Docker containers are already running by executing `docker-compose up -d` separately.
 
 ## Environment Variables
 
@@ -133,4 +134,3 @@ Use the `request.rest` file with REST Client extension in VS Code, or import it 
 - Images are stored in the `uploads/` directory
 - JWT tokens are used for authentication
 - All shopping list and product routes require authentication
-
