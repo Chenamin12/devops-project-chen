@@ -32,7 +32,7 @@ npm install
 3. Create a `.env` file from the example:
 
 ```bash
-cp .env.example .env
+cp env_example.txt .env
 ```
 
 4. Update the `.env` file with your configuration (especially JWT_SECRET)
