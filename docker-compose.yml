@@ -1,8 +1,28 @@
-version: '3.8'
+version: '3.9'
 
 services:
+  api:
+    build: .
+    container_name: shopping-list-api
+    restart: always
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      # Use container-to-container networking; override any host-specific URI
+      - MONGO_URI=mongodb://${MONGO_ROOT_USERNAME:-admin}:${MONGO_ROOT_PASSWORD:-password123}@mongodb:27017/${MONGO_DATABASE:-shopping_list_db}?authSource=admin
+      - PORT=3000
+      - NODE_ENV=production
+    volumes:
+      - ./uploads:/usr/src/app/uploads
+    depends_on:
+      - mongodb
+    networks:
+      - shopping-list-network
+
   mongodb:
-    image: mongo:7.0
+    image: mongo:6.0
     container_name: shopping-list-mongodb
     restart: always
     ports:
