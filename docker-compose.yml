@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   api:
-    build: .
+    build: ./server
     container_name: shopping-list-api
     restart: on-failure:5
     ports:
@@ -15,14 +15,14 @@ services:
       - PORT=3000
       - NODE_ENV=production
     volumes:
-      - ./uploads:/usr/src/app/uploads
+      - ./server/uploads:/usr/src/app/uploads
     depends_on:
       - mongodb
     networks:
       - shopping-list-network
 
   mongodb:
-    image: mongo:6.0
+    image: mongo:7.0
     container_name: shopping-list-mongodb
     restart: on-failure:5
     ports:
