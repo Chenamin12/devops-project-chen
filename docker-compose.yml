@@ -1,12 +1,32 @@
-version: '3.8'
+version: "3.9"
 
 services:
-  mongodb:
-    image: mongo:7.0
-    container_name: shopping-list-mongodb
-    restart: always
+  api:
+    build: .
+    container_name: shopping-list-api
+    restart: on-failure:5
     ports:
-      - "27018:27017"  # Custom port 27018 on host, default 27017 in container
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      # Use container-to-container networking; override any host-specific URI
+      - MONGO_URI=mongodb://${MONGO_ROOT_USERNAME:-admin}:${MONGO_ROOT_PASSWORD:-password123}@mongodb:27017/${MONGO_DATABASE:-shopping_list_db}?authSource=admin
+      - PORT=3000
+      - NODE_ENV=production
+    volumes:
+      - ./uploads:/usr/src/app/uploads
+    depends_on:
+      - mongodb
+    networks:
+      - shopping-list-network
+
+  mongodb:
+    image: mongo:6.0
+    container_name: shopping-list-mongodb
+    restart: on-failure:5
+    ports:
+      - "27018:27017" # Custom port 27018 on host, default 27017 in container
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
@@ -19,9 +39,9 @@ services:
   mongo-express:
     image: mongo-express:1.0.2
     container_name: shopping-list-mongo-express
-    restart: always
+    restart: on-failure:5
     ports:
-      - "8081:8081"  # Mongo Express web interface
+      - "8081:8081" # Mongo Express web interface
     environment:
       ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_ROOT_USERNAME}
       ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_ROOT_PASSWORD}
@@ -39,4 +59,3 @@ volumes:
 networks:
   shopping-list-network:
     driver: bridge
-
