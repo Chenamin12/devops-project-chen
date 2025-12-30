@@ -1,5 +1,6 @@
 // API Configuration
-const API_BASE_URL = "http://localhost:3000/api"
+// Use relative path - nginx will proxy /api requests to the api service
+const API_BASE_URL = "/api"
 
 // Generic API call function
 async function apiCall(method, endpoint, data = null, requiresAuth = true) {
