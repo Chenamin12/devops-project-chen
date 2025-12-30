@@ -53,6 +53,17 @@ services:
     networks:
       - shopping-list-network
 
+  nginx:
+    build: ./client
+    container_name: shopping-list-nginx
+    restart: on-failure:5
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    networks:
+      - shopping-list-network
+
 volumes:
   mongodb_data:
 
