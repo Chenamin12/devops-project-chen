@@ -1,6 +1,5 @@
 # Dependencies
 node_modules/
-package-lock.json
 yarn.lock
 
 # Environment variables
@@ -95,6 +94,7 @@ jspm_packages/
 
 # Uploads directory
 uploads/
+server/tests/uploads/
 
 # OS files
 .DS_Store
