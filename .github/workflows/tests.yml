@@ -122,24 +122,34 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # --- START OF FIXED SECTION ---
       - name: Configure SSH
+        shell: bash
         env:
           SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
           EC2_HOST: ${{ secrets.EC2_HOST }}
         run: |
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          # Write SSH key using environment variable (more reliable for multi-line content)
-          echo "$SSH_KEY" > ~/.ssh/ec2_key.pem
-          chmod 600 ~/.ssh/ec2_key.pem
-          # Verify key file
-          if [ ! -s ~/.ssh/ec2_key.pem ]; then
-            echo "Error: SSH key file is empty or not created"
+
+          # 1. Validate secrets (Debug Check)
+          if [ -z "$SSH_KEY" ]; then
+            echo "Error: SSH_KEY is empty. Check GitHub Secrets."
             exit 1
           fi
-          # Add EC2 host to known_hosts
-          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts 2>&1
+          if [ -z "$EC2_HOST" ]; then
+            echo "Error: EC2_HOST is empty. Check GitHub Secrets."
+            exit 1
+          fi
 
+          # 2. Write SSH key
+          echo "$SSH_KEY" > ~/.ssh/ec2_key.pem
+          chmod 600 ~/.ssh/ec2_key.pem
+
+          # 3. Add EC2 host to known_hosts (Errors visible now)
+          echo "Scanning host $EC2_HOST..."
+          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
+      # --- END OF FIXED SECTION ---
       - name: Copy deployment script to EC2
         run: |
           scp -i ~/.ssh/ec2_key.pem -o StrictHostKeyChecking=no deploy.sh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/deploy.sh
@@ -193,11 +203,6 @@ jobs:
         with:
           server_address: smtp.gmail.com
           server_port: 465
-          # NOTE: Add these secrets in GitHub Settings → Secrets and variables → Actions:
-          # EMAIL_USERNAME: test@gmail.com
-          # EMAIL_PASSWORD: 123456 (or use Gmail App Password if 2FA is enabled)
-          # EMAIL_TO: test@gmail.com
-          # EMAIL_FROM: test@gmail.com
           username: ${{ secrets.EMAIL_USERNAME }}
           password: ${{ secrets.EMAIL_PASSWORD }}
           subject: "❌ CI Tests Failed - ${{ github.repository }}"
