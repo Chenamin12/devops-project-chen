@@ -113,10 +113,68 @@ jobs:
           cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/shopping-list-client:buildcache
           cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/shopping-list-client:buildcache,mode=max
 
+  deploy-to-ec2:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/ec2_key.pem
+          chmod 600 ~/.ssh/ec2_key.pem
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Copy deployment script to EC2
+        run: |
+          scp -i ~/.ssh/ec2_key.pem -o StrictHostKeyChecking=no deploy.sh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/deploy.sh
+
+      - name: Run deployment on EC2
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+          MONGO_ROOT_USERNAME: ${{ secrets.MONGO_ROOT_USERNAME }}
+          MONGO_ROOT_PASSWORD: ${{ secrets.MONGO_ROOT_PASSWORD }}
+          MONGO_DATABASE: ${{ secrets.MONGO_DATABASE }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_EXPIRE: ${{ secrets.JWT_EXPIRE }}
+          MONGO_EXPRESS_USERNAME: ${{ secrets.MONGO_EXPRESS_USERNAME }}
+          MONGO_EXPRESS_PASSWORD: ${{ secrets.MONGO_EXPRESS_PASSWORD }}
+          UPLOAD_PATH: ${{ secrets.UPLOAD_PATH }}
+          MAX_FILE_SIZE: ${{ secrets.MAX_FILE_SIZE }}
+        run: |
+          ssh -i ~/.ssh/ec2_key.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+            chmod +x ~/deploy.sh
+            export DOCKER_USERNAME="$DOCKER_USERNAME"
+            export DOCKER_TOKEN="$DOCKER_TOKEN"
+            export MONGO_ROOT_USERNAME="$MONGO_ROOT_USERNAME"
+            export MONGO_ROOT_PASSWORD="$MONGO_ROOT_PASSWORD"
+            export MONGO_DATABASE="$MONGO_DATABASE"
+            export JWT_SECRET="$JWT_SECRET"
+            export JWT_EXPIRE="$JWT_EXPIRE"
+            export MONGO_EXPRESS_USERNAME="$MONGO_EXPRESS_USERNAME"
+            export MONGO_EXPRESS_PASSWORD="$MONGO_EXPRESS_PASSWORD"
+            export UPLOAD_PATH="$UPLOAD_PATH"
+            export MAX_FILE_SIZE="$MAX_FILE_SIZE"
+            ~/deploy.sh
+          EOF
+
+      - name: Verify deployment
+        run: |
+          ssh -i ~/.ssh/ec2_key.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'ENDSSH'
+            cd ~/shopping-list-app
+            docker-compose ps
+            echo "✅ Deployment verification completed"
+          ENDSSH
+
   notify-on-failure:
     runs-on: ubuntu-latest
-    needs: [test, build-and-push]
-    if: always() && (needs.test.result == 'failure' || needs.build-and-push.result == 'failure')
+    needs: [test, build-and-push, deploy-to-ec2]
+    if: always() && (needs.test.result == 'failure' || needs.build-and-push.result == 'failure' || (needs.deploy-to-ec2.result == 'failure' && needs.deploy-to-ec2.result != 'skipped'))
 
     steps:
       - name: Send email notification on failure
