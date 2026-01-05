@@ -22,6 +22,8 @@ A full-stack shopping list management application built with Node.js, Express, a
 
 ## Installation
 
+### Using Docker Compose (Recommended)
+
 1. Clone the repository and navigate to the project directory
 
 2. Create a `.env` file from the example:
@@ -196,6 +198,28 @@ flowchart TD
 ├── request.rest               # API testing file
 └── README.md                  # This file
 ```
+
+## Docker Services
+
+The `docker-compose.yml` file defines the following services:
+
+- **nginx**: Serves the client application and acts as a reverse proxy for API requests
+  - Port: 80
+  - Build: `./client` (uses `client/Dockerfile`)
+  - Network: `shopping-list-network`
+
+- **api**: Node.js Express backend server
+  - Port: 3000 (internal, proxied through nginx)
+  - Build: `./server` (uses `server/Dockerfile`)
+  - Network: `shopping-list-network`
+
+- **mongodb**: MongoDB database
+  - Port: 27018 (host) → 27017 (container)
+  - Network: `shopping-list-network`
+
+- **mongo-express**: Web-based MongoDB admin interface
+  - Port: 8081
+  - Network: `shopping-list-network`
 
 ## Notes
 
