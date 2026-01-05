@@ -204,16 +204,19 @@ flowchart TD
 The `docker-compose.yml` file defines the following services:
 
 - **nginx**: Serves the client application and acts as a reverse proxy for API requests
+
   - Port: 80
   - Build: `./client` (uses `client/Dockerfile`)
   - Network: `shopping-list-network`
 
 - **api**: Node.js Express backend server
+
   - Port: 3000 (internal, proxied through nginx)
   - Build: `./server` (uses `server/Dockerfile`)
   - Network: `shopping-list-network`
 
 - **mongodb**: MongoDB database
+
   - Port: 27018 (host) → 27017 (container)
   - Network: `shopping-list-network`
 
