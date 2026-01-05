@@ -137,11 +137,29 @@ jobs:
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+          MONGO_ROOT_USERNAME: ${{ secrets.MONGO_ROOT_USERNAME }}
+          MONGO_ROOT_PASSWORD: ${{ secrets.MONGO_ROOT_PASSWORD }}
+          MONGO_DATABASE: ${{ secrets.MONGO_DATABASE }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_EXPIRE: ${{ secrets.JWT_EXPIRE }}
+          MONGO_EXPRESS_USERNAME: ${{ secrets.MONGO_EXPRESS_USERNAME }}
+          MONGO_EXPRESS_PASSWORD: ${{ secrets.MONGO_EXPRESS_PASSWORD }}
+          UPLOAD_PATH: ${{ secrets.UPLOAD_PATH }}
+          MAX_FILE_SIZE: ${{ secrets.MAX_FILE_SIZE }}
         run: |
           ssh -i ~/.ssh/ec2_key.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
             chmod +x ~/deploy.sh
             export DOCKER_USERNAME="$DOCKER_USERNAME"
             export DOCKER_TOKEN="$DOCKER_TOKEN"
+            export MONGO_ROOT_USERNAME="$MONGO_ROOT_USERNAME"
+            export MONGO_ROOT_PASSWORD="$MONGO_ROOT_PASSWORD"
+            export MONGO_DATABASE="$MONGO_DATABASE"
+            export JWT_SECRET="$JWT_SECRET"
+            export JWT_EXPIRE="$JWT_EXPIRE"
+            export MONGO_EXPRESS_USERNAME="$MONGO_EXPRESS_USERNAME"
+            export MONGO_EXPRESS_PASSWORD="$MONGO_EXPRESS_PASSWORD"
+            export UPLOAD_PATH="$UPLOAD_PATH"
+            export MAX_FILE_SIZE="$MAX_FILE_SIZE"
             ~/deploy.sh
           EOF
 
