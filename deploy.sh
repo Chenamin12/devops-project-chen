@@ -6,14 +6,100 @@ set -e  # Exit on error
 
 echo "🚀 Starting deployment..."
 
+# Check and install Docker if not present
+echo "🔍 Checking for Docker installation..."
+if ! command -v docker &> /dev/null; then
+    echo "📦 Docker not found. Installing Docker..."
+    
+    # Update package index
+    sudo apt-get update
+    
+    # Install prerequisites
+    sudo apt-get install -y \
+        ca-certificates \
+        curl \
+        gnupg \
+        lsb-release
+    
+    # Add Docker's official GPG key
+    sudo mkdir -p /etc/apt/keyrings
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    
+    # Set up the repository
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+      $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    
+    # Install Docker Engine
+    sudo apt-get update
+    sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+    
+    # Add current user to docker group (optional, for running without sudo)
+    sudo usermod -aG docker $USER
+    
+    echo "✅ Docker installed successfully"
+else
+    echo "✅ Docker is already installed"
+    docker --version
+fi
+
+# Check and install Docker Compose if not present (fallback for older systems)
+if ! command -v docker-compose &> /dev/null; then
+    if command -v docker &> /dev/null && docker compose version &> /dev/null; then
+        echo "✅ Docker Compose v2 (plugin) is available"
+        # Create alias if needed
+        if ! command -v docker-compose &> /dev/null; then
+            echo "Creating docker-compose alias..."
+            sudo ln -sf $(which docker) /usr/local/bin/docker-compose || true
+        fi
+    else
+        echo "📦 Docker Compose not found. Installing Docker Compose..."
+        # Install docker-compose standalone if needed
+        sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        sudo chmod +x /usr/local/bin/docker-compose
+        echo "✅ Docker Compose installed successfully"
+    fi
+else
+    echo "✅ Docker Compose is already installed"
+    docker-compose --version
+fi
+
+# Ensure Docker daemon is running
+echo "🔧 Ensuring Docker daemon is running..."
+sudo systemctl start docker || true
+sudo systemctl enable docker || true
+
+# Determine if we need sudo for docker commands
+DOCKER_CMD="docker"
+if ! docker ps &> /dev/null; then
+    echo "⚠️  Docker requires sudo privileges. Using sudo for docker commands."
+    DOCKER_CMD="sudo docker"
+fi
+
+# Helper function to run docker-compose commands (works with both v1 and v2)
+docker_compose() {
+    if command -v docker-compose &> /dev/null; then
+        if [ "$DOCKER_CMD" = "sudo docker" ]; then
+            sudo docker-compose "$@"
+        else
+            docker-compose "$@"
+        fi
+    elif $DOCKER_CMD compose version &> /dev/null 2>&1; then
+        $DOCKER_CMD compose "$@"
+    else
+        echo "❌ Error: Neither docker-compose nor docker compose is available"
+        exit 1
+    fi
+}
+
 # Login to Docker Hub
 echo "📦 Logging in to Docker Hub..."
-echo "$DOCKER_TOKEN" | docker login -u "$DOCKER_USERNAME" --password-stdin
+echo "$DOCKER_TOKEN" | $DOCKER_CMD login -u "$DOCKER_USERNAME" --password-stdin
 
 # Pull latest images
 echo "⬇️ Pulling latest images..."
-docker pull "$DOCKER_USERNAME/shopping-list-api:latest" || echo "⚠️  Failed to pull API image, will use existing"
-docker pull "$DOCKER_USERNAME/shopping-list-client:latest" || echo "⚠️  Failed to pull client image, will use existing"
+$DOCKER_CMD pull "$DOCKER_USERNAME/shopping-list-api:latest" || echo "⚠️  Failed to pull API image, will use existing"
+$DOCKER_CMD pull "$DOCKER_USERNAME/shopping-list-client:latest" || echo "⚠️  Failed to pull client image, will use existing"
 
 # Create necessary directories
 echo "📁 Creating directories..."
@@ -256,11 +342,11 @@ export DOCKER_USERNAME
 
 # Stop existing containers
 echo "🛑 Stopping existing containers..."
-docker-compose down || true
+docker_compose down || true
 
 # Start services
 echo "🚀 Starting services..."
-docker-compose up -d
+docker_compose up -d
 
 # Wait for services to be healthy
 echo "⏳ Waiting for services to start..."
@@ -268,11 +354,11 @@ sleep 10
 
 # Check service status
 echo "📊 Service status:"
-docker-compose ps
+docker_compose ps
 
 # Show logs
 echo "📋 Recent logs:"
-docker-compose logs --tail=50
+docker_compose logs --tail=50
 
 echo "✅ Deployment completed successfully!"
 echo "🌐 Application should be available at http://$(curl -s ifconfig.me)"
