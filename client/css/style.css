@@ -799,7 +799,7 @@ body {
 .calendar-weekdays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: var(--spacing-xs);
+  gap: var(--spacing-sm);
   margin-bottom: var(--spacing-sm);
 }
 
@@ -814,11 +814,10 @@ body {
 .calendar-days {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: var(--spacing-xs);
+  gap: var(--spacing-sm);
 }
 
 .calendar-day {
-  aspect-ratio: 1;
   min-height: 100px;
   background: var(--bg-secondary);
   border: 2px solid var(--border-light);
@@ -830,6 +829,8 @@ body {
   transition: var(--transition);
   position: relative;
   overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .calendar-day:hover {
@@ -859,6 +860,8 @@ body {
   background: transparent;
   border: none;
   cursor: default;
+  min-height: 0;
+  padding: 0;
 }
 
 .calendar-day.empty:hover {
@@ -1135,6 +1138,12 @@ body {
 
   .calendar-day {
     min-height: 80px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .calendar-day.empty {
+    min-height: 0;
   }
 
   .reminder-badge {
@@ -1164,6 +1173,13 @@ body {
   .calendar-day {
     min-height: 60px;
     padding: 2px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .calendar-day.empty {
+    min-height: 0;
+    padding: 0;
   }
 
   .calendar-day-number {
