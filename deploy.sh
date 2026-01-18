@@ -43,25 +43,14 @@ else
     docker --version
 fi
 
-# Check and install Docker Compose if not present (fallback for older systems)
-if ! command -v docker-compose &> /dev/null; then
-    if command -v docker &> /dev/null && docker compose version &> /dev/null; then
-        echo "✅ Docker Compose v2 (plugin) is available"
-        # Create alias if needed
-        if ! command -v docker-compose &> /dev/null; then
-            echo "Creating docker-compose alias..."
-            sudo ln -sf $(which docker) /usr/local/bin/docker-compose || true
-        fi
-    else
-        echo "📦 Docker Compose not found. Installing Docker Compose..."
-        # Install docker-compose standalone if needed
-        sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-        sudo chmod +x /usr/local/bin/docker-compose
-        echo "✅ Docker Compose installed successfully"
-    fi
-else
-    echo "✅ Docker Compose is already installed"
+# Check for Docker Compose (v1 standalone or v2 plugin)
+if docker compose version &> /dev/null 2>&1 || sudo docker compose version &> /dev/null 2>&1; then
+    echo "✅ Docker Compose v2 (plugin) is available"
+elif command -v docker-compose &> /dev/null; then
+    echo "✅ Docker Compose v1 (standalone) is available"
     docker-compose --version
+else
+    echo "⚠️  Warning: Docker Compose v1 not found. Docker Compose v2 plugin should be available with Docker CE."
 fi
 
 # Ensure Docker daemon is running
@@ -70,22 +59,43 @@ sudo systemctl start docker || true
 sudo systemctl enable docker || true
 
 # Determine if we need sudo for docker commands
-DOCKER_CMD="docker"
-if ! docker ps &> /dev/null; then
+USE_SUDO=false
+if ! docker ps &> /dev/null 2>&1; then
     echo "⚠️  Docker requires sudo privileges. Using sudo for docker commands."
-    DOCKER_CMD="sudo docker"
+    USE_SUDO=true
 fi
+
+# Helper function to run docker commands with proper sudo handling
+run_docker() {
+    if [ "$USE_SUDO" = true ]; then
+        sudo -E env DOCKER_USERNAME="$DOCKER_USERNAME" docker "$@"
+    else
+        docker "$@"
+    fi
+}
 
 # Helper function to run docker-compose commands (works with both v1 and v2)
 docker_compose() {
+    # Try docker compose v2 first (plugin)
+    if [ "$USE_SUDO" = true ]; then
+        if sudo docker compose version &> /dev/null 2>&1; then
+            sudo -E env DOCKER_USERNAME="$DOCKER_USERNAME" docker compose "$@"
+            return $?
+        fi
+    else
+        if docker compose version &> /dev/null 2>&1; then
+            docker compose "$@"
+            return $?
+        fi
+    fi
+    
+    # Fallback to docker-compose v1 (standalone)
     if command -v docker-compose &> /dev/null; then
-        if [ "$DOCKER_CMD" = "sudo docker" ]; then
-            sudo docker-compose "$@"
+        if [ "$USE_SUDO" = true ]; then
+            sudo -E env DOCKER_USERNAME="$DOCKER_USERNAME" docker-compose "$@"
         else
             docker-compose "$@"
         fi
-    elif $DOCKER_CMD compose version &> /dev/null 2>&1; then
-        $DOCKER_CMD compose "$@"
     else
         echo "❌ Error: Neither docker-compose nor docker compose is available"
         exit 1
@@ -94,12 +104,12 @@ docker_compose() {
 
 # Login to Docker Hub
 echo "📦 Logging in to Docker Hub..."
-echo "$DOCKER_TOKEN" | $DOCKER_CMD login -u "$DOCKER_USERNAME" --password-stdin
+echo "$DOCKER_TOKEN" | run_docker login -u "$DOCKER_USERNAME" --password-stdin
 
 # Pull latest images
 echo "⬇️ Pulling latest images..."
-$DOCKER_CMD pull "$DOCKER_USERNAME/shopping-list-api:latest" || echo "⚠️  Failed to pull API image, will use existing"
-$DOCKER_CMD pull "$DOCKER_USERNAME/shopping-list-client:latest" || echo "⚠️  Failed to pull client image, will use existing"
+run_docker pull "$DOCKER_USERNAME/shopping-list-api:latest" || echo "⚠️  Failed to pull API image, will use existing"
+run_docker pull "$DOCKER_USERNAME/shopping-list-client:latest" || echo "⚠️  Failed to pull client image, will use existing"
 
 # Create necessary directories
 echo "📁 Creating directories..."
