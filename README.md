@@ -215,6 +215,7 @@ The `docker-compose.yml` file defines the following services:
   - Build: `./server` (uses `server/Dockerfile`)
   - Network: `shopping-list-network`
 
+
 - **mongodb**: MongoDB database
 
   - Port: 27018 (host) → 27017 (container)
