@@ -799,7 +799,7 @@ body {
 .calendar-weekdays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: var(--spacing-sm);
+  gap: var(--spacing-md);
   margin-bottom: var(--spacing-sm);
 }
 
@@ -814,7 +814,7 @@ body {
 .calendar-days {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: var(--spacing-sm);
+  gap: var(--spacing-xs);
 }
 
 .calendar-day {
@@ -829,7 +829,6 @@ body {
   transition: var(--transition);
   position: relative;
   overflow: hidden;
-  width: 100%;
   box-sizing: border-box;
 }
 
@@ -1138,7 +1137,6 @@ body {
 
   .calendar-day {
     min-height: 80px;
-    width: 100%;
     box-sizing: border-box;
   }
   
@@ -1173,7 +1171,6 @@ body {
   .calendar-day {
     min-height: 60px;
     padding: 2px;
-    width: 100%;
     box-sizing: border-box;
   }
   
